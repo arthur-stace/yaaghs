@@ -1,5 +1,10 @@
 #!/usr/bin/env sh
 
-mkdir -p tmp/$COURSE
-curl -o $LOCAL_RESOURCE -O -L -C - $REMOTE_RESOURCE
+local_resource=$1
+remote_resource=$2
+
+# fixme handle condition in make
+if [ ! -f $local_resource ]; then
+  curl -o $local_resource -O -L -C - $remote_resource
+fi
 
