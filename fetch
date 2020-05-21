@@ -1,0 +1,5 @@
+#!/usr/bin/env sh
+
+mkdir -p tmp/$COURSE
+curl -o $LOCAL_RESOURCE -O -L -C - $REMOTE_RESOURCE
+

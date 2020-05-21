@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+# TODO markdown parsing
+echo $@
