@@ -1,16 +1,17 @@
-SECTIONS = tmp/README.txt
-REMOTE_RESOURCE = https://www.$(DOMAIN)/$(COURSE)/archive/master.zip
-
-project = ${PROJECT}
-labels = "${LABELS}"
 CLONE = git clone --depth=1 https://github.com
 
-default: $(project)
+
+
+default: $(PROJECT)
+
+$(PROJECT):
+	$(CLONE)/$@
+
 
 $(DOMAIN)/$(project): tmp/$(project)/issues.txt $(DOMAIN)/$(project)/notes
 	$(CLONE)/$(project) $@
 
-tmp/$(project)/issues.txt: tmp/$(project)
+/$(project)/issues.txt: tmp/$(project)
 	ok.sh list_issues $(project) labels=$(labels) _filter='.[] | "\(.html_url)"' > $@
 
 tmp/$(project):
@@ -35,3 +36,10 @@ tmp/pull_requests.txt:
 		url=`curl $$pull_request | jq -r .review_comments_url`;\
 		curl $$url | jq -cr '.[] | [.path, .url][]'; \
 	done > $@
+
+build:
+	docker build -t backlog:latest .
+
+
+run:
+	docker run backlog:latest make -e PROJECT=$(PROJECT)
