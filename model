@@ -1,8 +1,0 @@
-#!/usr/bin/env sh
-
-section=$1
-dir=$2
-
-# TODO model on load
-find $dir -name *$section* \
-| xargs cat
