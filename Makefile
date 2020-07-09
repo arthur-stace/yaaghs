@@ -1,45 +1,43 @@
-CLONE = git clone --depth=1 https://github.com
+LABELS = "good first issue"
+
+OKSH = /usr/local/bin/ok.sh
 
 
+default: $(PROJECT)/todo
+	mkdir -p $(DOMAIN)/$(PROJECT)
+	mv $(PROJECT)/* $(DOMAIN)/$(PROJECT)/
+	${MAKE} clean
 
-default: $(PROJECT)
-
-$(PROJECT):
-	$(CLONE)/$@
-
-
-$(DOMAIN)/$(project): tmp/$(project)/issues.txt $(DOMAIN)/$(project)/notes
-	$(CLONE)/$(project) $@
-
-/$(project)/issues.txt: tmp/$(project)
-	ok.sh list_issues $(project) labels=$(labels) _filter='.[] | "\(.html_url)"' > $@
-
-tmp/$(project):
-	mkdir -p $@
-
-clean:
-	rm -rf github.com/$(project)
-	rm -rf tmp/$(project)/issues.txt
-
-$(DOMAIN)/$(project)/notes: tmp/$(project)/issues.txt
-	mkdir -p $@
-	for url in `cat $<`; do \
-		curl $$url \
-		| pup '.js-timeline-item' \
-		| lynx -dump -stdin -unique_urls -list_inline > $@/`basename $$url`.txt; \
-	done
-
-tmp/%.json:
-
-tmp/pull_requests.txt:
-	for pull_request in $(shell ~/dotfiles-local/bin/ok.sh list_pulls $(USER) $(APPLICATION) _filter='.[] | "\(.url)"'); do \
-		url=`curl $$pull_request | jq -r .review_comments_url`;\
-		curl $$url | jq -cr '.[] | [.path, .url][]'; \
-	done > $@
-
-build:
-	docker build -t backlog:latest .
 
 
 run:
-	docker run backlog:latest make -e PROJECT=$(PROJECT)
+	docker run -v $(shell pwd):/work backpack make -e PROJECT=$(PROJECT) -e DOMAIN=$(DOMAIN)
+
+
+
+$(PROJECT)/todo: $(PROJECT)/notes
+	for file in $(wildcard $</*.html); do sh scripts/todo.sh $$file; done > $@
+
+
+
+$(PROJECT)/notes: $(PROJECT)/issues.txt
+	mkdir -p $@
+	for url in `cat $<`; do curl $$url > $@/`basename $$url`.html; done
+
+
+
+$(PROJECT)/issues.txt: $(PROJECT)
+	$(OKSH) list_issues $(PROJECT) labels=$(LABELS) _filter='.[] | "\(.html_url)"'\
+	> $@
+
+
+
+$(PROJECT):
+	mkdir -p $(PROJECT)
+
+
+
+clean:
+	find $(DOMAIN)/$(PROJECT) -name *.html | xargs rm
+	find $(DOMAIN)/$(PROJECT) -name *.txt | xargs rm
+
